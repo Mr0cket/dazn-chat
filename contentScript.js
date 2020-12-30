@@ -1,7 +1,9 @@
 // inject the inline style header
 const chatStyle = document.createElement("style");
 
-chatStyle.innerHTML = ``;
+chatStyle.innerHTML = `.video-content__video-content-container--376eu {
+  right: 150px;
+}`;
 
 document.head.appendChild();
 
@@ -10,7 +12,9 @@ const chatUI = document.createElement("div");
 chatUI.style.cssText = `background: white; borderRadius: 5px; width: 20vw; height: 75vh; position: absolute; top: 0; right: 0;`;
 const vidContainer = document.querySelector(".main__main-page-layout--yEFl9>div");
 vidContainer.appendChild(chatUI);
-
+const vidDiv = (document.querySelector(
+  ".main__main-page-layout--yEFl9>div"
+).children[0].style.cssText = `position: relative; right: 160px`);
 chatUI.innerHTML = `
   <div id='message-area' style='height: 90%;'>
     <ul id="messageList" style='list-style-type: none;margin: 0;padding: 0; color: black; font-size: 14px; height:-webkit-fill-available' ></ul>

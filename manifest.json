@@ -1,11 +1,16 @@
 {
   "name": "Dazn Chat",
   "version": "0.1",
-  "manifest_version": 3,
+  "manifest_version": 2,
   "description": "Adds a global chat to the DAZN website - chat and banter with other fans watching the same live event!",
-  "default_locale": "en",
+  "permissions": ["storage"],
   "background": {
-    "scripts": [],
-    "persistent": "false"
-  }
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.google.com/*"],
+      "js": ["test.js"]
+    }
+  ]
 }
