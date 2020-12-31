@@ -5,3 +5,8 @@ chrome.runtime.onInstalled.addListener(function () {
     console.log("The color is green.");
   });
 });
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log("sender:", sender);
+  fetch();
+});
