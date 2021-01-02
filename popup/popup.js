@@ -1,11 +1,19 @@
+alert("this is working!");
 globalThis.popup = true;
-chrome.tabs.executeScript(
-  globalThis.activeTabId,
-  {
-    file: "content-script.js",
-  },
-  () => console.log("content-script injected")
-);
+try {
+  chrome.tabs.executeScript(
+    globalThis.activeTabId,
+    {
+      file: "contentScript.js",
+    },
+    () => {
+      if (chrome.runtime.lastError) return console.log("error:", chrome.runtime.lastError);
+      console.log("content-script injected");
+    }
+  );
+} catch (e) {
+  console.log(e);
+}
 
 ////////////////////////////////
 //testing extension messaging.//
