@@ -9,10 +9,10 @@ chrome.runtime.onInstalled.addListener(() => {
 
   Manifest v2 && chromeVerson < 88 => chrome.pageAction 
 
-  MV2 && chromeVerson > 88, Manifest v3 => chrome.action
+  MV2 &&chromeVerson > 88, Manifest v3 => chrome.action
 */
 
-chrome.action.onClicked.addListener((tab) => {
+chrome.pageAction.onClicked.addListener((tab) => {
   enablePopup(tab, tab.id);
 });
 
@@ -37,29 +37,29 @@ action      => action.enable() && action.disable
 
 // check the page and then enable popup
 function enablePopup(tab, tabId) {
-  if (!/.dazn./.test(tab.url)) return chrome.action.disable(tabId);
-  chrome.action.enable(tabId, () => console.log("extension enabled on tab:", tabId));
+  if (!/.dazn./.test(tab.url)) return chrome.pageAction.hide(tabId);
+  chrome.pageAction.show(tabId, () => console.log("extension enabled on tab:", tabId));
 
   //if live event enable dazn chat toggle
   const event = isLiveEventPage(tab.url);
   if (!event) {
     console.log(`not a live event.
     popup => watch.html`);
-    return chrome.action.setPopup({ popup: "watch.html", tabId });
+    return chrome.pageAction.setPopup({ popup: "popup/wrongPage.html", tabId });
   }
   console.log(`tab ${tabId} - is Live event`);
 
-  chrome.action.setPopup({ popup: "popup.html", tabId });
+  chrome.pageAction.setPopup({ popup: "popup/index.html", tabId });
   console.log(`popup => popup.html`);
-  chrome.action.setBadgeText({ tabId, text: "live" });
-  chrome.action.setBadgeBackgroundColor({ tabId, color: "green" });
+  // chrome.action.setBadgeText({ tabId, text: "live" });
+  // chrome.action.setBadgeBackgroundColor({ tabId, color: "green" });
   chrome.storage.sync.set({ chatEnabled: true }, () => console.log("icon enabled"));
   globalThis.daznChatEnabled = true;
   globalThis.activeTabId = tabId;
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  console.log(`tab ${tabId} page status updated`, tab.status);
+  console.log(`Tab ${tabId} ${tab.status}`);
   if (tab.status !== "complete") return;
   if (globalThis.daznChatEnabled) return console.log("daznChat already Enabled", daznChatEnabled);
   enablePopup(tab, tabId);

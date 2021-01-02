@@ -5,11 +5,19 @@
   "description": "Adds a global chat to the DAZN website - chat and banter with other fans watching the same live event!",
   "permissions": ["storage", "tabs", "activeTab"],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"]
   },
-  "action": {
+  "page_action": {
     "default_title": "DAZN-Chat"
   },
+  "web_accessible_resources": [
+    "chatUi/index.html",
+    "chatUi/test.html",
+    "chatUi/jquery.min.js",
+    "chatUi/socket.io.js",
+    "chatUi/index.js",
+    "chatUi/socket.io.js.map"
+  ],
   "icons": {
     "48": "assets/icons/icon48.png",
     "200": "assets/icons/icon.png"
