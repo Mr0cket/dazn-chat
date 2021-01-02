@@ -69,7 +69,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("sender:", sender);
   console.log("request", request);
-  console.log("sender.id matches location.host:", sender?.id === location?.host);
+  // console.log("sender.id matches location.host:", sender?.id === location?.host);
   setTimeout(() => sendResponse("good Evening"), 50);
   // sendResponse("good Evening");
 });
