@@ -36,18 +36,3 @@ vidDiv.style.cssText = 'position: relative; right: 160px';
 
   globalThis.chatEnabled = true;
 }
-/* const msgList = document.querySelector("#messageList");
-
-function addMsg(msg, parent) {
-  const newMsg = document.createElement("li");
-  newMsg.innerText = msg;
-  parent.append(newMsg);
-}
-
-document.querySelector("#m").onsubmit = (event) => {
-  event.preventDefault();
-  const message = event.target[0].value;
-  addMsg(message, msgList);
-  event.target[0].value = "";
-};
- */
