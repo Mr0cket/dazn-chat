@@ -7,15 +7,14 @@ window.onload = () => {
   // get the eventId
   // send a message to background.js asking for the eventId.
   // send it to the server in the "join" event.
-  const getEventId = () =>
-    new Promise((resolve, reject) => {
+
+  const joinEvent = async () => {
+    eventId = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ type: "eventId" }, (id) => {
         console.log("eventId in callback:", id);
         resolve(id);
       });
     });
-  const joinEvent = async () => {
-    eventId = await getEventId();
     socket.emit("join", { username, eventId });
   };
   // create & handle WebSocket

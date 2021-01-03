@@ -1,4 +1,3 @@
-alert("this is working!");
 globalThis.popup = true;
 try {
   chrome.tabs.executeScript(
