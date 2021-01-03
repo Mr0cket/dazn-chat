@@ -7,7 +7,7 @@
   "background": {
     "scripts": ["background.js"]
   },
-  "page_action": {
+  "browser_action": {
     "default_title": "DAZN-Chat"
   },
   "web_accessible_resources": [

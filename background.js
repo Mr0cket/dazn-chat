@@ -7,12 +7,14 @@ chrome.runtime.onInstalled.addListener(() => {
 /*  
   Need to update code when chrome88 is release on main chrome channel.
 
-  Manifest v2 && chromeVerson < 88 => chrome.pageAction 
+  Manifest v2 && chromeVerson < 88 => chrome.browserAction 
 
   MV2 &&chromeVerson > 88, Manifest v3 => chrome.action
 */
 
-chrome.pageAction.onClicked.addListener((tab) => {
+chrome.browserAction.onClicked.addListener((tab) => {
+  console.log("icon was clicked");
+  globalThis.popupEnabled = false;
   enablePopup(tab, tab.id);
 });
 
@@ -30,38 +32,39 @@ function isLiveEventPage(urlString) {
 
 /*  enable/disable popup / extension
 
-pageAction  => pageAction.show && pageAction.hide
+browserAction  => browserAction.enable && browserAction.disable
 action      => action.enable() && action.disable
 
 */
 
 // check the page and then enable popup
 function enablePopup(tab, tabId) {
-  if (!/.dazn./.test(tab.url)) return chrome.pageAction.hide(tabId);
-  chrome.pageAction.show(tabId, () => console.log("extension enabled on tab:", tabId));
+  if (!/.dazn./.test(tab.url)) return chrome.browserAction.disable(tabId);
+  chrome.browserAction.enable(tabId, () => console.log("extension enabled on tab:", tabId));
 
   //if live event enable dazn chat toggle
   const event = isLiveEventPage(tab.url);
   if (!event) {
     console.log(`not a live event.
     popup => watch.html`);
-    return chrome.pageAction.setPopup({ popup: "popup/wrongPage.html", tabId });
+    return chrome.browserAction.setPopup({ popup: "popup/wrongPage.html", tabId });
   }
   console.log(`tab ${tabId} - is Live event`);
 
-  chrome.pageAction.setPopup({ popup: "popup/index.html", tabId });
+  chrome.browserAction.setPopup({ popup: "popup/index.html", tabId });
   console.log(`popup => popup.html`);
-  // chrome.action.setBadgeText({ tabId, text: "live" });
-  // chrome.action.setBadgeBackgroundColor({ tabId, color: "green" });
+  chrome.browserAction.setBadgeText({ tabId, text: "live" });
+  chrome.browserAction.setBadgeBackgroundColor({ tabId, color: "green" });
   chrome.storage.sync.set({ chatEnabled: true }, () => console.log("icon enabled"));
-  globalThis.daznChatEnabled = true;
+  globalThis.popupEnabled = true;
   globalThis.activeTabId = tabId;
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   console.log(`Tab ${tabId} ${tab.status}`);
   if (tab.status !== "complete") return;
-  if (globalThis.daznChatEnabled) return console.log("daznChat already Enabled", daznChatEnabled);
+  if (globalThis.popupEnabled)
+    return console.log("daznChat already Enabled", globalThis.popupEnabled);
   enablePopup(tab, tabId);
 });
 
@@ -70,6 +73,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("sender:", sender);
   console.log("request", request);
   // console.log("sender.id matches location.host:", sender?.id === location?.host);
-  setTimeout(() => sendResponse("good Evening"), 50);
+  const eventId = sender.tab.url.match(/^.*\/([a-z\-0-9]+)\??.*/)[1];
+  sendResponse(eventId);
   // sendResponse("good Evening");
 });
