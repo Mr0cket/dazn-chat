@@ -22,7 +22,7 @@ window.onload = () => {
 
   document.querySelector("form").onsubmit = function (e) {
     e.preventDefault(); // prevents page reloading
-    console.log($("#m").val());
+    console.log("chat message emitted:", $("#m").val());
     socket.emit("chat message", $("#m").val());
     socket.emit("salutations", "Hello!", { mr: "john" }, Uint8Array.from([1, 2, 3, 4]));
     $("#m").val("");
@@ -33,6 +33,7 @@ window.onload = () => {
     console.log("client Id:", socket.id);
   });
   socket.on("chat message", function (msg) {
+    console.log("new message:", msg);
     $("#messages").append($("<li>").text(msg));
   });
   socket.on("join", function (msg) {
