@@ -18,6 +18,26 @@ chrome.browserAction.onClicked.addListener((tab) => {
   enablePopup(tab, tab.id);
 });
 
+const checkLocationChange = () => {
+  // could make a promise later if necessary
+  console.log("sending check location message");
+  if (globalThis.popupEnabled)
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const port = chrome.tabs.sendMessage(tabs[0].id, { type: "checkLocation" }, (reload) => {
+        if (reload) {
+          // if true, io client should connect to the new room and disconnect from the old room
+          // reload the extension to be able to inject the content script again.
+          // console.log(`disable exentension on tab ${tabs[0].id}`);
+          // chrome.browserAction.disable(tabs[0].id);
+          globalThis.popupEnabled = false;
+        }
+      });
+      console.log("port:", port);
+    });
+  globalThis.locationTested = true;
+  setTimeout(() => (globalThis.locationTested = false), 8000); // check for the path change once every 8 seconds (bad to use global variables for this, but ohwell)
+};
+
 function isLiveEventPage(urlString) {
   const { hostname, pathname } = new URL(urlString);
   if (pathname.includes("ArticleId")) return false;
@@ -57,10 +77,11 @@ function enablePopup(tab, tabId) {
   chrome.browserAction.setBadgeBackgroundColor({ tabId, color: "green" });
   chrome.storage.sync.set({ chatEnabled: true }, () => console.log("icon enabled"));
   globalThis.popupEnabled = true;
-  globalThis.activeTabId = tabId;
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  console.log(globalThis.locationTested);
+  if (!globalThis.locationTested) checkLocationChange();
   console.log(`Tab ${tabId} ${tab.status}`);
   if (tab.status !== "complete") return;
   if (globalThis.popupEnabled)
@@ -73,7 +94,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("sender:", sender);
   console.log("request", request);
   // console.log("sender.id matches location.host:", sender?.id === location?.host);
-  const eventId = sender.tab.url.match(/^.*\/([a-z\-0-9]+)\??.*/)[1];
-  sendResponse(eventId);
+  const { type, event } = request;
+  if (type === "eventDetails") {
+    const eventId = sender.tab.url.match(/^.*\/([a-z\-0-9]+)\??.*/)[1];
+    const title = sender.tab.title;
+    console.log(title);
+    sendResponse({ eventId, title });
+  }
+  if (type === "unloaded") {
+    console.log("window was unloaded");
+    console.log("event", event);
+  }
   // sendResponse("good Evening");
 });

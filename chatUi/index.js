@@ -1,7 +1,7 @@
 window.onload = () => {
   let username = localStorage.user;
-  if (!username && typeof username !== "string") {
-    username = prompt("Whats your name?");
+  if (!username || typeof username !== "string") {
+    username = prompt("Create a username");
     localStorage.user = username;
   }
   // get the eventId
@@ -9,22 +9,31 @@ window.onload = () => {
   // send it to the server in the "join" event.
 
   const joinEvent = async () => {
-    eventId = await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ type: "eventId" }, (id) => {
-        console.log("eventId in callback:", id);
-        resolve(id);
+    eventDetails = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type: "eventDetails" }, (eventDetails) => {
+        console.log("eventDetails:", eventDetails);
+        resolve(eventDetails);
       });
     });
-    socket.emit("join", { username, eventId });
+    socket.emit("join", { username, ...eventDetails });
   };
-  // create & handle WebSocket
+  const switchRooms = async () => {
+    console.log("client switching rooms");
+    newEventDetails = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type: "eventDetails" }, (eventDetails) => {
+        console.log("newEventDetails:", eventDetails);
+        resolve(eventDetails);
+      });
+    });
+    socket.emit("switchRooms", newEventDetails);
+  };
+  // create & handle connection to WebSocket
   const socket = io("https://dazn-chat-api.herokuapp.com/");
 
   document.querySelector("form").onsubmit = function (e) {
     e.preventDefault(); // prevents page reloading
-    console.log("chat message emitted:", $("#m").val());
-    socket.emit("chat message", $("#m").val());
-    socket.emit("salutations", "Hello!", { mr: "john" }, Uint8Array.from([1, 2, 3, 4]));
+    message = $("#m").val();
+    socket.emit("chat message", message);
     $("#m").val("");
     return false;
   };
@@ -33,11 +42,18 @@ window.onload = () => {
     console.log("client Id:", socket.id);
   });
   socket.on("chat message", function (msg) {
-    console.log("new message:", msg);
     $("#messages").append($("<li>").text(msg));
   });
   socket.on("join", function (msg) {
     $("#messages").append($("<li>").text(msg));
   });
   joinEvent();
+  console.log("injected iframe script chrome:", chrome);
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log("meesage recieved in iframe");
+    console.log("request", request);
+    if (request.type === "switchRooms") {
+      switchRooms();
+    }
+  });
 };
