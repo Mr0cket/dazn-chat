@@ -8,6 +8,7 @@ window.onload = () => {
   // send a message to background.js asking for the eventId.
   // send it to the server in the "join" event.
 
+  // chat Events
   const joinEvent = async () => {
     eventDetails = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ type: "eventDetails" }, (eventDetails) => {
@@ -27,6 +28,7 @@ window.onload = () => {
     });
     socket.emit("switchRooms", newEventDetails);
   };
+
   // create & handle connection to WebSocket
   const socket = io("https://dazn-chat-api.herokuapp.com/");
 

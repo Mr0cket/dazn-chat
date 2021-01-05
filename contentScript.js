@@ -5,9 +5,9 @@ if (!globalThis.chatEnabled) {
 
   // script to reposition video player:
 
-  const vidDiv = (document.querySelector(
+  document.querySelector(
     ".main__main-page-layout--yEFl9>div"
-  ).children[0].style.cssText = `position: relative; right: 160px`);
+  ).children[0].style.cssText = `position: relative; right: 160px`;
 
   const script = document.createElement("script");
   const code = `
@@ -19,7 +19,8 @@ if (!globalThis.chatEnabled) {
 
   // inject The chat-UI as an iframe into the page.
 
-  const chatUI = document.createElement("iframe");
+  const chatUI = document.createElement("iframe", {});
+  chatUI.id = "dazn-chat-frame";
   chatUI.setAttribute("frameborder", 0);
   chatUI.style.cssText = `borderRadius: 5px; width: 20vw; height: 60vh; position: absolute; top: 0; right: 0;`;
   const vidContainer = document.querySelector(".main__main-page-layout--yEFl9>div");
@@ -34,30 +35,38 @@ if (!globalThis.chatEnabled) {
     const port = chrome.runtime.sendMessage({ type: "unloaded", event });
   });
   let path = location.pathname;
-  console.log(chrome.runtime.onMessage);
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log(`previous path: ${path}
+    console.log("request => contentScript:", request);
+    console.log("sender:", sender);
+
+    // CheckLocation message
+    if (request.type === "checkLocation") {
+      console.log(`previous path: ${path}
     current Path: ${location.pathname}
     ${location}`);
-    // if (request.type !== "checkLocation") return console.log("request.type error:", request.type);
-    console.log("request:", request);
-    console.log("sender:", sender);
-    if (path !== location.pathname) {
-      // client has moved to a new webpage
-      // assume that new webpage is another stream.
-      path = location.pathname;
-      // send message to iframe script to switch chat rooms.
+      if (path !== location.pathname) {
+        // client has moved to a new webpage
+        // assume that new webpage is another stream.
+        path = location.pathname;
+        // send message to iframe script to switch chat rooms.
+        const port = chrome.runtime.sendMessage({ type: "switchRooms" });
+        sendResponse(true);
+      }
+      sendResponse(false);
+    }
 
-      console.log(chrome);
-      const port = chrome.runtime.sendMessage({ type: "switchRooms" });
-
-      sendResponse(true);
-    } else sendResponse(false);
+    if (request.type === "closeChat") {
+      teardown();
+      // test if it worked... somehow?
+    }
   });
 }
 
 function teardown() {
   console.log("teardown the chatUI here");
-  vidContainer.removeChild(chatUI);
-  document.querySelector(".main__main-page-layout--yEFl9>div>div").style.right = "0px";
+  const chatFrame = document.querySelector("#dazn-chat-frame");
+  console.log(chatFrame);
+  chatFrame.remove();
+  const vidDiv = document.querySelector(".main__main-page-layout--yEFl9>div>div");
+  vidDiv.style.right = "0px";
 }

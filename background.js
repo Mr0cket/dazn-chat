@@ -15,7 +15,7 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.browserAction.onClicked.addListener((tab) => {
   console.log("icon was clicked");
   globalThis.popupEnabled = false;
-  enablePopup(tab, tab.id);
+  enableExtension(tab, tab.id);
 });
 
 const checkLocationChange = () => {
@@ -38,6 +38,20 @@ const checkLocationChange = () => {
   setTimeout(() => (globalThis.locationTested = false), 8000); // check for the path change once every 8 seconds (bad to use global variables for this, but ohwell)
 };
 
+function toggleChat(tabId) {
+  console.log("adding chat.");
+  chrome.tabs.executeScript(
+    tabId,
+    {
+      file: "contentScript.js",
+    },
+    () => {
+      if (chrome.runtime.lastError) return console.log("error:", chrome.runtime.lastError);
+      console.log("content-script injected");
+    }
+  );
+}
+
 function isLiveEventPage(urlString) {
   const { hostname, pathname } = new URL(urlString);
   if (pathname.includes("ArticleId")) return false;
@@ -45,7 +59,7 @@ function isLiveEventPage(urlString) {
   if (!home) return false;
   const eventId = pathname.match(/^.*\/([a-z\-0-9]+)\??.*/)[1];
   console.log("eventId length:", eventId.length);
-  return eventId && eventId.length < 20;
+  return eventId && eventId.length > 20;
 }
 
 /*  enable/disable popup / extension
@@ -56,10 +70,7 @@ action      => action.enable() && action.disable
 */
 
 // check the page and then enable popup
-function enablePopup(tab, tabId) {
-  if (!/.dazn./.test(tab.url)) return chrome.browserAction.disable(tabId);
-  chrome.browserAction.enable(tabId, () => console.log("extension enabled on tab:", tabId));
-
+function enableExtension(tab, tabId) {
   //if live event enable dazn chat toggle
   if (!isLiveEventPage(tab.url)) {
     console.log(`not a live event.
@@ -67,23 +78,31 @@ function enablePopup(tab, tabId) {
     return chrome.browserAction.setPopup({ popup: "popup/wrongPage.html", tabId });
   }
   console.log(`tab ${tabId} - is Live event`);
-
   chrome.browserAction.setPopup({ popup: "popup/index.html", tabId });
   console.log(`popup => popup.html`);
-  chrome.browserAction.setBadgeText({ tabId, text: "live" });
-  chrome.browserAction.setBadgeBackgroundColor({ tabId, color: "green" });
-  chrome.storage.sync.set({ chatEnabled: true }, () => console.log("icon enabled"));
+  toggleChat(tabId);
+  // chrome.storage.sync.set({ chatEnabled: true }, () => console.log("icon enabled"));
   globalThis.popupEnabled = true;
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   console.log(globalThis.locationTested);
+  if (!/.dazn./.test(tab.url)) return chrome.browserAction.disable(tabId);
+  else chrome.browserAction.enable(tabId, () => console.log("extension enabled on tab:", tabId));
   if (!globalThis.locationTested) checkLocationChange();
   console.log(`Tab ${tabId} ${tab.status}`);
   if (tab.status !== "complete") return;
-  if (globalThis.popupEnabled)
-    return console.log("daznChat already Enabled", globalThis.popupEnabled);
-  enablePopup(tab, tabId);
+
+  if (isLiveEventPage) {
+    chrome.browserAction.setBadgeText({ tabId, text: "live" });
+    chrome.browserAction.setBadgeBackgroundColor({ tabId, color: "green" });
+  } else {
+    chrome.browserAction.setBadgeText({ tabId, text: "" });
+    chrome.browserAction.setBadgeBackgroundColor({ tabId, color: "" });
+  }
+  // if (globalThis.popupEnabled)
+  //   return console.log("daznChat already Enabled", globalThis.popupEnabled);
+  // enablePopup(tab, tabId);
 });
 
 // Message listener
@@ -92,6 +111,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("request", request);
   // console.log("sender.id matches location.host:", sender?.id === location?.host);
   const { type, event } = request;
+  // check types
   if (type === "eventDetails") {
     const eventId = sender.tab.url.match(/^.*\/([a-z\-0-9]+)\??.*/)[1];
     const title = sender.tab.title;

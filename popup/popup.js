@@ -1,25 +1,37 @@
-globalThis.popup = true;
-function toggleChat(event) {
-  try {
+/* function toggleChat(event) {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.executeScript(
+      tabs[0].id,
+      {
+        file: "contentScript.js",
+      },
+      () => {
+        if (chrome.runtime.lastError) return console.log("error:", chrome.runtime.lastError);
+        console.log("content-script injected");
+      }
+    );
+  });
+}
+toggleChat(); */
+window.onload = () => {
+  function closeChat() {
+    console.log("[popup]: sending closeChat msg");
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.tabs.executeScript(
+      const port = chrome.tabs.sendMessage(
         tabs[0].id,
-        {
-          file: "contentScript.js",
-        },
-        () => {
-          if (chrome.runtime.lastError) return console.log("error:", chrome.runtime.lastError);
-          console.log("content-script injected");
-        }
+        { type: "closeChat" },
+        (recieved) =>
+          new Promise((res, rej), () => {
+            console.log("[popup]: closeChat req recieved");
+            res(recieved);
+          })
       );
     });
-  } catch (e) {
-    console.log(e);
   }
-}
-toggleChat();
-// document.querySelector("button").onclick = toggleChat;
-
+  const closeBtn = document.querySelector("button");
+  console.log(closeBtn);
+  closeBtn.onclick = closeChat;
+};
 ////////////////////////////////
 //testing extension messaging.//
 ////////////////////////////////
