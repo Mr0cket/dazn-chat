@@ -9,7 +9,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
   Manifest v2 && chromeVerson < 88 => chrome.browserAction 
 
-  MV2 &&chromeVerson > 88, Manifest v3 => chrome.action
+  (Manifest V2 | Manifest v3) && chromeVerson > 88 => chrome.action
 */
 
 chrome.browserAction.onClicked.addListener((tab) => {
@@ -43,11 +43,9 @@ function isLiveEventPage(urlString) {
   if (pathname.includes("ArticleId")) return false;
   const home = pathname.match(/\/home\//);
   if (!home) return false;
-  console.log("contentId length:", pathname.slice(home.index + home.length).length);
   const eventId = pathname.match(/^.*\/([a-z\-0-9]+)\??.*/)[1];
-  if (eventId.length < 20) return false;
-
-  return eventId; // send event Id to the backend to register the event..?
+  console.log("eventId length:", eventId.length);
+  return eventId && eventId.length < 20;
 }
 
 /*  enable/disable popup / extension
@@ -63,8 +61,7 @@ function enablePopup(tab, tabId) {
   chrome.browserAction.enable(tabId, () => console.log("extension enabled on tab:", tabId));
 
   //if live event enable dazn chat toggle
-  const event = isLiveEventPage(tab.url);
-  if (!event) {
+  if (!isLiveEventPage(tab.url)) {
     console.log(`not a live event.
     popup => watch.html`);
     return chrome.browserAction.setPopup({ popup: "popup/wrongPage.html", tabId });
