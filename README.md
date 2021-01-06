@@ -15,7 +15,7 @@ with eachother! The extension detects when you have switched to another event st
 
 TBF
 
-# Project Features
+# Project Features Roadmap
 
 ## 1.0
 
@@ -36,7 +36,7 @@ TBF
 - When full-screen state => true: Hide chat UI
 - When full-screen state => false: open chat UI
 
-## Future Improvements:
+# Future Improvements:
 
 - Toggle chat interface visibility with a button
 - chat can be enabled when video is in full -creen state
