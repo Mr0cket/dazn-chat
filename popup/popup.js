@@ -13,25 +13,50 @@
   });
 }
 toggleChat(); */
+
 window.onload = () => {
-  function closeChat() {
-    console.log("[popup]: sending closeChat msg");
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const port = chrome.tabs.sendMessage(
-        tabs[0].id,
-        { type: "closeChat" },
-        (recieved) =>
-          new Promise((res, rej), () => {
-            console.log("[popup]: closeChat req recieved");
-            res(recieved);
-          })
-      );
-    });
-  }
+  let chatOpen = true;
   const closeBtn = document.querySelector("button");
-  console.log(closeBtn);
-  closeBtn.onclick = closeChat;
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    function toggleChat() {
+      if (!chatOpen) {
+        chrome.tabs.executeScript(
+          tabId,
+          {
+            file: "contentScript.js",
+          },
+          () => {
+            if (chrome.runtime.lastError) return console.log("error:", chrome.runtime.lastError);
+            console.log("content-script injected");
+          }
+        );
+      } else {
+        console.log("[popup]: sending closeChat msg");
+        const port = chrome.tabs.sendMessage(
+          tabs[0].id,
+          { type: "closeChat" },
+          (recieved) =>
+            new Promise((res, rej), () => {
+              console.log("[popup]: closeChat req recieved");
+              chrome.browserAction.disable(tabs[0].id);
+              chrome.browserAction.enable(tabs[0].id, () => console.log("extension reset"));
+              chatOpen = false;
+              closeBtn.innerText = "open Chat";
+              res(recieved);
+            })
+        );
+        console.log("tabId", tabId);
+        chrome.tabs.reload(tabId, {}, () => {
+          console.log("tab reloaded");
+        });
+      }
+    }
+
+    closeBtn.onclick = toggleChat;
+  });
 };
+
 ////////////////////////////////
 //testing extension messaging.//
 ////////////////////////////////
