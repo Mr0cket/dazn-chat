@@ -45,7 +45,7 @@ function isLiveEventPage(urlString) {
   if (!home) return false;
   const eventId = pathname.match(/^.*\/([a-z\-0-9]+)\??.*/)[1];
   console.log("eventId length:", eventId.length);
-  return eventId && eventId.length < 20;
+  return eventId && eventId.length > 20;
 }
 
 /*  enable/disable popup / extension
