@@ -9,7 +9,7 @@ window.onload = () => {
           console.log("[popup]: openChat req recieved");
           chatOpen = true;
           closeBtn.innerText = "close Chat";
-          res(recieved);
+          recieved;
         });
       } else {
         console.log("[popup]: sending closeChat msg");
