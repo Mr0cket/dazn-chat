@@ -1,24 +1,29 @@
-globalThis.popup = true;
-function toggleChat(event) {
-  try {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.tabs.executeScript(
-        tabs[0].id,
-        {
-          file: "contentScript.js",
-        },
-        () => {
-          if (chrome.runtime.lastError) return console.log("error:", chrome.runtime.lastError);
-          console.log("content-script injected");
-        }
-      );
-    });
-  } catch (e) {
-    console.log(e);
-  }
-}
-toggleChat();
-// document.querySelector("button").onclick = toggleChat;
+window.onload = () => {
+  let chatOpen = true;
+  const closeBtn = document.querySelector("button");
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    function toggleChat() {
+      console.log("chat toggled. chatOpen:", chatOpen);
+      if (!chatOpen) {
+        const port = chrome.tabs.sendMessage(tabs[0].id, { type: "openChat" }, (recieved) => {
+          console.log("[popup]: openChat req recieved");
+          chatOpen = true;
+          closeBtn.innerText = "close Chat";
+          recieved;
+        });
+      } else {
+        console.log("[popup]: sending closeChat msg");
+        const port = chrome.tabs.sendMessage(tabs[0].id, { type: "closeChat" }, (recieved) => {
+          console.log("[popup]: closeChat req recieved");
+          chatOpen = false;
+          closeBtn.innerText = "open Chat";
+        });
+      }
+    }
+
+    closeBtn.onclick = toggleChat;
+  });
+};
 
 ////////////////////////////////
 //testing extension messaging.//

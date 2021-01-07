@@ -1,63 +1,82 @@
-// check if chat has been previously enabled
-if (!globalThis.chatEnabled) {
-  // inject the inline style element
-  const chatStyle = document.createElement("style");
+// initialise chat on contentScript load
+// const chatStyle = document.createElement("style");
+const vidDiv = document.querySelector(".main__main-page-layout--yEFl9>div>div");
+const vidContainer = document.querySelector(".main__main-page-layout--yEFl9>div");
+const chatUI = document.createElement("iframe");
+chatUI.id = "dazn-chat-frame";
+chatUI.setAttribute("frameborder", 0);
+chatUI.style.cssText = `borderRadius: 5px; width: calc(80vh - 401.77778px); height: calc(100vh - 231px); position: absolute; top: 0; right: 0;`;
+// make source the index.html
+chatUI.src = chrome.runtime.getURL("chatUi/index.html");
+// initial chat injection on script load
+injectChat();
 
-  // script to reposition video player:
-
-  const vidDiv = (document.querySelector(
-    ".main__main-page-layout--yEFl9>div"
-  ).children[0].style.cssText = `position: relative; right: 160px`);
-
-  const script = document.createElement("script");
-  const code = `
-    const vidDiv = document.querySelector(".main__main-page-layout--yEFl9>div>div");
-    vidDiv.style.right = '160px';
-`;
-
-  document.head.appendChild(script);
-
+function injectChat() {
   // inject The chat-UI as an iframe into the page.
-
-  const chatUI = document.createElement("iframe");
-  chatUI.setAttribute("frameborder", 0);
-  chatUI.style.cssText = `borderRadius: 5px; width: 20vw; height: 60vh; position: absolute; top: 0; right: 0;`;
-  const vidContainer = document.querySelector(".main__main-page-layout--yEFl9>div");
   vidContainer.appendChild(chatUI);
-  // make source the index.html
-  chatUI.src = chrome.runtime.getURL("chatUi/index.html");
+  vidDiv.style.right = `160px`; // <== removed css: position: relative;
+}
+function teardownChat() {
+  chatUI.remove();
+  vidDiv.style.right = "0px";
+}
 
-  window.addEventListener("load", (e) => {
-    console.log("load event triggered:", e);
-  });
-  window.addEventListener("unload", (event) => {
-    const port = chrome.runtime.sendMessage({ type: "unloaded", event });
-  });
-  let path = location.pathname;
-  console.log(chrome.runtime.onMessage);
-  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+// event triggers
+window.addEventListener("load", (e) => {
+  console.log("load event triggered:", e);
+});
+window.addEventListener("unload", (event) => {
+  const port = chrome.runtime.sendMessage({ type: "unloaded", event });
+});
+
+let path = location.pathname;
+
+// message listener
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log("request => contentScript:", request);
+  console.log("sender:", sender);
+
+  // CheckLocation message
+  if (request.type === "checkLocation") {
     console.log(`previous path: ${path}
     current Path: ${location.pathname}
     ${location}`);
-    // if (request.type !== "checkLocation") return console.log("request.type error:", request.type);
-    console.log("request:", request);
-    console.log("sender:", sender);
     if (path !== location.pathname) {
       // client has moved to a new webpage
       // assume that new webpage is another stream.
       path = location.pathname;
       // send message to iframe script to switch chat rooms.
-
-      console.log(chrome);
       const port = chrome.runtime.sendMessage({ type: "switchRooms" });
-
       sendResponse(true);
-    } else sendResponse(false);
-  });
-}
+    }
+    sendResponse(false);
+  }
+  // closeChat message
+  if (request.type === "closeChat") {
+    teardownChat();
+    // test if it worked... somehow?
+  }
+  if (request.type === "openChat") {
+    injectChat();
+    // test if this worked... somehow?
+    // if it didn't work, do something else
+  }
+});
 
-function teardown() {
-  console.log("teardown the chatUI here");
-  vidContainer.removeChild(chatUI);
-  document.querySelector(".main__main-page-layout--yEFl9>div>div").style.right = "0px";
-}
+// future chatUI toggle implementation using a button next to the video player
+/* 
+const chatBtn = document.createElement("button");
+vidContainer.appendChild(chatBtn);
+chatBtn.onclick = toggleChat;
+
+let chatOpen = false;
+
+function toggleChat() {
+  if (chatOpen) {
+    teardownChat();
+    chatOpen = false;
+  } else {
+    injectChat();
+    chatOpen = true;
+  }
+} */
