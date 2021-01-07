@@ -1,54 +1,22 @@
-/* function toggleChat(event) {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.executeScript(
-      tabs[0].id,
-      {
-        file: "contentScript.js",
-      },
-      () => {
-        if (chrome.runtime.lastError) return console.log("error:", chrome.runtime.lastError);
-        console.log("content-script injected");
-      }
-    );
-  });
-}
-toggleChat(); */
-
 window.onload = () => {
   let chatOpen = true;
   const closeBtn = document.querySelector("button");
-
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     function toggleChat() {
+      console.log("chat toggled. chatOpen:", chatOpen);
       if (!chatOpen) {
-        chrome.tabs.executeScript(
-          tabId,
-          {
-            file: "contentScript.js",
-          },
-          () => {
-            if (chrome.runtime.lastError) return console.log("error:", chrome.runtime.lastError);
-            console.log("content-script injected");
-          }
-        );
+        const port = chrome.tabs.sendMessage(tabs[0].id, { type: "openChat" }, (recieved) => {
+          console.log("[popup]: openChat req recieved");
+          chatOpen = true;
+          closeBtn.innerText = "close Chat";
+          res(recieved);
+        });
       } else {
         console.log("[popup]: sending closeChat msg");
-        const port = chrome.tabs.sendMessage(
-          tabs[0].id,
-          { type: "closeChat" },
-          (recieved) =>
-            new Promise((res, rej), () => {
-              console.log("[popup]: closeChat req recieved");
-              chrome.browserAction.disable(tabs[0].id);
-              chrome.browserAction.enable(tabs[0].id, () => console.log("extension reset"));
-              chatOpen = false;
-              closeBtn.innerText = "open Chat";
-              res(recieved);
-            })
-        );
-        console.log("tabId", tabId);
-        chrome.tabs.reload(tabId, {}, () => {
-          console.log("tab reloaded");
+        const port = chrome.tabs.sendMessage(tabs[0].id, { type: "closeChat" }, (recieved) => {
+          console.log("[popup]: closeChat req recieved");
+          chatOpen = false;
+          closeBtn.innerText = "open Chat";
         });
       }
     }
