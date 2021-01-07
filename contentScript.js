@@ -1,38 +1,21 @@
-// check if chat has been previously enabled
-// inject the inline style element
-const chatStyle = document.createElement("style");
+// initialise chat on contentScript load
+// const chatStyle = document.createElement("style");
+const vidDiv = document.querySelector(".main__main-page-layout--yEFl9>div>div");
+const vidContainer = document.querySelector(".main__main-page-layout--yEFl9>div");
 const chatUI = document.createElement("iframe");
 chatUI.id = "dazn-chat-frame";
 chatUI.setAttribute("frameborder", 0);
-chatUI.style.cssText = `borderRadius: 5px; width: 20vw; height: 60vh; position: absolute; top: 0; right: 0;`;
+chatUI.style.cssText = `borderRadius: 5px; width: calc(80vh - 401.77778px); height: calc(100vh - 231px); position: absolute; top: 0; right: 0;`;
 // make source the index.html
 chatUI.src = chrome.runtime.getURL("chatUi/index.html");
-// const script = document.createElement("script");
-const vidDiv = document.querySelector(".main__main-page-layout--yEFl9>div>div");
-const vidContainer = document.querySelector(".main__main-page-layout--yEFl9>div");
-const chatBtn = document.createElement("button");
-vidContainer.appendChild(chatBtn);
-chatBtn.onclick = toggleChat;
+// initial chat injection on script load
+injectChat();
 
-let chatOpen = false;
-
-function toggleChat() {
-  if (chatOpen) {
-    teardownChat();
-    chatOpen = false;
-  } else {
-    injectChat();
-    chatOpen = true;
-  }
-}
-
-// initialise chat on contentScript load
 function injectChat() {
   // inject The chat-UI as an iframe into the page.
   vidContainer.appendChild(chatUI);
-  vidDiv.style.cssText = `right: 160px`; // <== removed css: position: relative;
+  vidDiv.style.right = `160px`; // <== removed css: position: relative;
 }
-
 function teardownChat() {
   chatUI.remove();
   vidDiv.style.right = "0px";
@@ -75,5 +58,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   if (request.type === "openChat") {
     injectChat();
+    // test if this worked... somehow?
+    // if it didn't work, do something else
   }
 });
+
+// future chatUI toggle implementation using a button next to the video player
+/* 
+const chatBtn = document.createElement("button");
+vidContainer.appendChild(chatBtn);
+chatBtn.onclick = toggleChat;
+
+let chatOpen = false;
+
+function toggleChat() {
+  if (chatOpen) {
+    teardownChat();
+    chatOpen = false;
+  } else {
+    injectChat();
+    chatOpen = true;
+  }
+} */
