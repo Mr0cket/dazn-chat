@@ -1,6 +1,6 @@
 # Dazn Chat Extension (chrome)
 
-### Banter amongst other fans watching the same match!
+### Banter amongst other fans watching the same match on DAZN!
 
 ## Description
 
